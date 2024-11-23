@@ -1,16 +1,13 @@
 /* Estilos generales */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    background-color: #5f0505;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-image: url("assets/images/library-background-zp3y3gk7am2pnsar.jpg"); 
-    background-size: cover;
-    background-position: center;
     color: #333;
 }
 
