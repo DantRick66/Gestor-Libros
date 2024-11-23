@@ -1,3 +1,21 @@
+// Función para mostrar mensajes
+function showMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('message-container');
+    
+    // Crear el mensaje
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`; // Añadimos una clase según el tipo de mensaje
+    messageDiv.textContent = message;
+
+    // Agregar el mensaje al contenedor
+    messageContainer.appendChild(messageDiv);
+
+    // Eliminar el mensaje después de 3 segundos
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+
 // Escucha el evento de envío del formulario para agregar un libro
 document.getElementById('book-form').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -9,16 +27,21 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
 
         // Validación de los campos
         if (title && author && description) {
-            const bookItem = document.createElement('li');
-            bookItem.classList.add('book-item');
-            bookItem.innerHTML = `${title} - ${author}`;
+        const bookItem = document.createElement('li');
+        bookItem.classList.add('book-item');
+        bookItem.innerHTML = `${title} - ${author}`;
+
 
         
-                    // Crear un botón de eliminar
+        // Crear un botón de eliminar
         const deleteButton = document.createElement('button');
         deleteButton.textContent = "Eliminar";
         deleteButton.onclick = function() {
             bookList.removeChild(bookItem);
+
+            // Mostrar mensaje de eliminación exitosa
+            showMessage(`El libro "${title}" fue eliminado.`, 'success');
+            
             if (bookList.children.length === 0) {
                 const noBooksMessage = document.createElement('li');
                 noBooksMessage.textContent = "No hay libros disponibles.";
@@ -38,8 +61,10 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
 
         // Mostrar detalles del libro al hacer clic en el libro
         bookItem.onclick = function() {
-            const detailsVisible = bookDetails.style.display === 'block';
-            bookDetails.style.display = detailsVisible ? 'none' : 'block';
+            if (e.target.tagName !== 'BUTTON') {
+                const detailsVisible = bookDetails.style.display === 'block';
+                bookDetails.style.display = detailsVisible ? 'none' : 'block';
+            }
         };
 
         bookList.appendChild(bookItem);
@@ -48,15 +73,23 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
         document.getElementById('title').value = '';
         document.getElementById('author').value = '';
         document.getElementById('description').value = '';
-
+        
         // Eliminar el mensaje "No hay libros disponibles" si existe
-        if (bookList.firstChild && bookList.firstChild.textContent === 'No hay libros disponibles.') {
-            bookList.firstChild.remove();
+        const noBooksMessage = bookList.querySelector('li:first-child');
+        if (noBooksMessage && noBooksMessage.textContent === 'No hay libros disponibles.') {
+            noBooksMessage.remove();
         }
+
+        
+        // Mostrar mensaje de adición exitosa
+        showMessage(`El libro "${title}" fue agregado correctamente.`, 'success');
     } else {
-        alert('Por favor, completa todos los campos.');
+        // Mostrar mensaje de error si los campos están vacíos
+        showMessage('Por favor, completa todos los campos.', 'error');
     }
 });
+
+
 
 // Función para buscar libros en la lista
 function searchBooks() {
@@ -76,16 +109,15 @@ function searchBooks() {
     });
 
     // Si no se encuentran resultados, mostrar mensaje
+    const noResultMessage = document.querySelector('.no-result');
     if (foundBooks === 0) {
-        const noResultMessage = document.createElement('li');
-        noResultMessage.textContent = "No se encontraron libros que coincidan con la búsqueda.";
-        noResultMessage.classList.add('no-result');
-        document.getElementById('books').appendChild(noResultMessage);
-    } else {
-        // Eliminar mensaje de "no resultados" si existen
-        const noResultMessage = document.querySelector('.no-result');
-        if (noResultMessage) {
-            noResultMessage.remove();
-        }
+        if (!noResultMessage) {
+        const noResultMessageDiv = document.createElement('li');
+        noResultMessageDiv.textContent = "No se encontraron libros que coincidan con la búsqueda.";
+        noResultMessageDiv.classList.add('no-result');
+        document.getElementById('books').appendChild(noResultMessageDiv);
     }
+} else if (noResultMessage) {
+    noResultMessage.remove();
+}
 }

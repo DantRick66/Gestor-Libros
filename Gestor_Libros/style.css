@@ -128,3 +128,46 @@ input[type="submit"]:hover {
     text-align: center;
     padding: 10px;
 }
+
+/* Contenedor del mensaje */
+#message-container {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: auto;
+}
+
+/* Estilo de mensajes */
+.message {
+    padding: 10px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-size: 1em;
+    color: white;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Estilo para mensajes de éxito */
+.message.success {
+    background-color: #4caf50;
+}
+
+/* Estilo para mensajes de error */
+.message.error {
+    background-color: #f44336;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
