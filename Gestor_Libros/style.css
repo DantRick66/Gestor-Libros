@@ -171,3 +171,51 @@ input[type="submit"]:hover {
         transform: translateY(0);
     }
 }
+
+.container,
+#login-container {
+    max-width: 400px;
+    width: 90%;
+    background-color: #d9c3c3;
+    color: #000;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+h1,
+h2 {
+    text-align: center;
+}
+
+button,
+input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover,
+input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    box-sizing: border-box;
+}
+
+/* Ocultar elementos */
+.hidden {
+    display: none;
+}
+
+
+

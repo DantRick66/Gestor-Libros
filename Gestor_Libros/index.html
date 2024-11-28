@@ -8,7 +8,28 @@
 </head>
 <body>
 
-<div class="container">
+    <!-- Formulario de Inicio de Sesión -->
+<div id="login-container">
+    <h2>Iniciar Sesión</h2>
+    <form id="login-form">
+        <label for="login-email">Correo electrónico:</label>
+        <input type="email" id="login-email" placeholder="Ingrese su correo" required>
+
+        <label for="login-password">Contraseña:</label>
+        <input type="password" id="login-password" placeholder="Ingrese su contraseña" required>
+
+        <button type="submit">Iniciar Sesión</button>
+    </form>
+
+    <p>
+        <a href="#" id="forgot-password">Olvidé mi contraseña</a>
+    </p>
+
+    <div id="login-message-container"></div> <!-- Mensajes de error o éxito -->
+</div>
+
+
+<div class="container hidden" id="gestor-libros">
     <h1>Gestión de Libros</h1>
 
     <!-- Contenedor para mensajes -->
