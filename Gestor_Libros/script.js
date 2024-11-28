@@ -130,12 +130,18 @@ document.getElementById('login-form').addEventListener('submit', function (e) {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
 
+    // Obtener el usuario almacenado en localStorage
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+
     // Simular autenticación
-    if (email === "usuario@ejemplo.com" && password === "Password123") {
+    if (storedUser && email === storedUser.email && password === storedUser.password) {
         showMessage("Inicio de sesión exitoso. Cargando el gestor de libros...", "success");
         setTimeout(() => {
-            // Ocultar el contenedor del inicio de sesión
-            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('login-container').classList.add('hidden');
+
+            // Mostrar el mensaje de bienvenida
+            document.getElementById('welcome-message').style.display = 'block';
+            document.getElementById('user-name').textContent = `Bienvenido, ${storedUser.name}`;
 
             // Mostrar el gestor de libros
             document.getElementById('gestor-libros').style.display = 'block';
@@ -149,4 +155,40 @@ document.getElementById('login-form').addEventListener('submit', function (e) {
 document.getElementById('forgot-password').addEventListener('click', function () {
     showMessage("Enlace de recuperación enviado a su correo.", "success");
 });
+
+
+// Escucha el evento de envío del formulario de registro
+document.getElementById('register-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById('register-name').value.trim();
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value.trim();
+
+    // Validación básica
+    if (name && email && password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password)) {
+        showMessage("Registro exitoso. Revise su correo para activar su cuenta.", "success");
+
+        // Guardar usuario en localStorage
+        localStorage.setItem('user', JSON.stringify({ name, email, password }));
+        
+        showMessage("Registro exitoso. Revise su correo para activar su cuenta.", "success");
+
+
+        // Simular redirección al login
+        setTimeout(() => {
+            document.getElementById('register-container').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+        }, 2000);
+    } else {
+        showMessage("La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.", "error");
+    }
+});
+
+document.getElementById('show-register').addEventListener('click', function (e) {
+    e.preventDefault();
+    document.getElementById('login-container').classList.add('hidden');
+    document.getElementById('register-container').classList.remove('hidden');
+});
+
 
