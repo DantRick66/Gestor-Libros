@@ -25,8 +25,16 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
     const description = document.getElementById('description').value.trim();
     const bookList = document.getElementById('books');
 
-        // Validación de los campos
-        if (title && author && description) {
+    // Limpiar mensajes anteriores
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = '';
+
+    // Validación de los campos
+    if (!title || !author || !description) {
+        showMessage('Por favor, completa todos los campos.', 'error');
+    } else if (description.length < 2) {
+        showMessage('La descripción debe tener al menos dos caracteres.', 'error');
+    } else {
         const bookItem = document.createElement('li');
         bookItem.classList.add('book-item');
         bookItem.innerHTML = `${title} - ${author}`;
@@ -83,10 +91,7 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
         
         // Mostrar mensaje de adición exitosa
         showMessage(`El libro "${title}" fue agregado correctamente.`, 'success');
-    } else {
-        // Mostrar mensaje de error si los campos están vacíos
-        showMessage('Por favor, completa todos los campos.', 'error');
-    }
+    } 
 });
 
 
@@ -123,18 +128,36 @@ function searchBooks() {
     }
 }
 
-// Escucha el evento de envío del formulario de inicio de sesión
 document.getElementById('login-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+    e.preventDefault(); // Evitar recarga de la página
 
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
+
+    // Limpiar mensajes anteriores
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = '';
+
+    // Validaciones básicas
+    if (!email || !password) {
+        showMessage("Por favor, completa todos los campos.", "error");
+        return;
+    }
+
+    // Validar formato del correo electrónico
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        showMessage("El correo electrónico no tiene un formato válido.", "error");
+        return;
+    }
 
     // Obtener el usuario almacenado en localStorage
     const storedUser = JSON.parse(localStorage.getItem('user'));
 
     // Simular autenticación
-    if (storedUser && email === storedUser.email && password === storedUser.password) {
+    if (!storedUser || email !== storedUser.email || password !== storedUser.password) {
+        showMessage("Credenciales incorrectas. Por favor, intente nuevamente.", "error");
+    } else {
         showMessage("Inicio de sesión exitoso. Cargando el gestor de libros...", "success");
         setTimeout(() => {
             document.getElementById('login-container').classList.add('hidden');
@@ -146,10 +169,9 @@ document.getElementById('login-form').addEventListener('submit', function (e) {
             // Mostrar el gestor de libros
             document.getElementById('gestor-libros').style.display = 'block';
         }, 2000);
-    } else {
-        showMessage("Credenciales incorrectas. Por favor, intente nuevamente.", "error");
     }
 });
+
 
 // Opción de "Olvidé mi contraseña"
 document.getElementById('forgot-password').addEventListener('click', function () {
@@ -165,10 +187,16 @@ document.getElementById('register-form').addEventListener('submit', function (e)
     const email = document.getElementById('register-email').value.trim();
     const password = document.getElementById('register-password').value.trim();
 
-    // Validación básica
-    if (name && email && password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password)) {
-        showMessage("Registro exitoso. Revise su correo para activar su cuenta.", "success");
+    // Limpiar mensajes anteriores
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = '';
 
+    // Validación básica
+    if (!name || !email || !password) {
+        showMessage("Todos los campos son obligatorios.", "error");
+    } else if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+        showMessage("La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.", "error");
+    } else {
         // Guardar usuario en localStorage
         localStorage.setItem('user', JSON.stringify({ name, email, password }));
         
@@ -180,8 +208,6 @@ document.getElementById('register-form').addEventListener('submit', function (e)
             document.getElementById('register-container').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         }, 2000);
-    } else {
-        showMessage("La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.", "error");
     }
 });
 
