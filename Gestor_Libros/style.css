@@ -178,7 +178,7 @@ input[type="submit"]:hover {
     width: 90%;
     background-color: #d9c3c3;
     color: #000;
-    padding: 30px;
+    padding: 60px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -217,5 +217,72 @@ textarea {
     display: none;
 }
 
+/* Estilo del formulario de registro */
+#register-container {
+    max-width: 400px;
+    margin: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 60px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#register-container h2 {
+    text-align: center;
+}
+
+#register-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#show-register {
+    text-align: center;
+    display: block;
+    margin-top: 10px;
+    color: blue;
+    cursor: pointer;
+}
+
+#forgot-password {
+    text-align: center;
+    display: block;
+    margin-top: 10px;
+    color: blue;
+    cursor: pointer;
+}
 
 
+/* Contenedor del mensaje de bienvenida */
+#welcome-message {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #f48787; 
+    color: white; 
+    padding: 15px 30px; 
+    border-radius: 10px; 
+    font-family: 'Arial', sans-serif; 
+    font-size: 20px; 
+    font-weight: bold; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 1000; 
+    transition: all 0.3s ease-in-out; 
+}
+
+/* Efecto cuando el mensaje de bienvenida está en hover (cuando el usuario pasa el mouse) */
+#welcome-message:hover {
+    background-color: #f48787; 
+    transform: scale(1.05); 
+}
+
+/* Estilo para el texto de bienvenida */
+#welcome-message h1 {
+    margin: 0; 
+    font-size: 24px; 
+    font-family: 'Verdana', sans-serif; 
+}
