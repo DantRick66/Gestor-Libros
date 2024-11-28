@@ -116,8 +116,37 @@ function searchBooks() {
         noResultMessageDiv.textContent = "No se encontraron libros que coincidan con la búsqueda.";
         noResultMessageDiv.classList.add('no-result');
         document.getElementById('books').appendChild(noResultMessageDiv);
+        }
+
+    } else if (noResultMessage) {
+        noResultMessage.remove();
     }
-} else if (noResultMessage) {
-    noResultMessage.remove();
 }
-}
+
+// Escucha el evento de envío del formulario de inicio de sesión
+document.getElementById('login-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    // Simular autenticación
+    if (email === "usuario@ejemplo.com" && password === "Password123") {
+        showMessage("Inicio de sesión exitoso. Cargando el gestor de libros...", "success");
+        setTimeout(() => {
+            // Ocultar el contenedor del inicio de sesión
+            document.getElementById('login-container').style.display = 'none';
+
+            // Mostrar el gestor de libros
+            document.getElementById('gestor-libros').style.display = 'block';
+        }, 2000);
+    } else {
+        showMessage("Credenciales incorrectas. Por favor, intente nuevamente.", "error");
+    }
+});
+
+// Opción de "Olvidé mi contraseña"
+document.getElementById('forgot-password').addEventListener('click', function () {
+    showMessage("Enlace de recuperación enviado a su correo.", "success");
+});
+
