@@ -25,76 +25,74 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
     const description = document.getElementById('description').value.trim();
     const bookList = document.getElementById('books');
 
-    // Limpiar mensajes anteriores
-    const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = '';
-
-    // Validación de los campos
     if (!title || !author || !description) {
         showMessage('Por favor, completa todos los campos.', 'error');
-    } else if (description.length < 2) {
-        showMessage('La descripción debe tener al menos dos caracteres.', 'error');
-    } else {
-        const bookItem = document.createElement('li');
-        bookItem.classList.add('book-item');
-        bookItem.innerHTML = `${title} - ${author}`;
+        return;
+    }
 
+    const bookItem = document.createElement('li');
+    bookItem.classList.add('book-item');
+    bookItem.innerHTML = `${title} - ${author}`;
 
-        
-        // Crear un botón de eliminar
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = "Eliminar";
-        deleteButton.onclick = function() {
-            bookList.removeChild(bookItem);
+    // Crear botón de "Marcar como leído"
+    const readButton = document.createElement('button');
+    readButton.textContent = 'Marcar como leído';
+    readButton.className = 'read-button';
 
-            // Mostrar mensaje de eliminación exitosa
-            showMessage(`El libro "${title}" fue eliminado.`, 'success');
-            
-            if (bookList.children.length === 0) {
-                const noBooksMessage = document.createElement('li');
-                noBooksMessage.textContent = "No hay libros disponibles.";
-                bookList.appendChild(noBooksMessage);
-            }
-        };
-
-        bookItem.appendChild(deleteButton);
-
-        // Crear los detalles del libro (inicialmente ocultos)
-        const bookDetails = document.createElement('div');
-        bookDetails.classList.add('book-details');
-        bookDetails.textContent = description;
-        
-        // Añadir los detalles del libro a la lista
-        bookItem.appendChild(bookDetails);
-
-        // Mostrar detalles del libro al hacer clic en el libro
-        bookItem.onclick = function() {
-            if (e.target.tagName !== 'BUTTON') {
-                const detailsVisible = bookDetails.style.display === 'block';
-                bookDetails.style.display = detailsVisible ? 'none' : 'block';
-            }
-        };
-
-        bookList.appendChild(bookItem);
-
-        // Limpiar los campos del formulario
-        document.getElementById('title').value = '';
-        document.getElementById('author').value = '';
-        document.getElementById('description').value = '';
-        
-        // Eliminar el mensaje "No hay libros disponibles" si existe
-        const noBooksMessage = bookList.querySelector('li:first-child');
-        if (noBooksMessage && noBooksMessage.textContent === 'No hay libros disponibles.') {
-            noBooksMessage.remove();
+    // Función para marcar como leído
+    readButton.onclick = function () {
+        if (bookItem.classList.contains('read')) {
+            bookItem.classList.remove('read');
+            readButton.textContent = 'Marcar como leído';
+        } else {
+            bookItem.classList.add('read');
+            readButton.textContent = 'Marcar como no leído';
         }
+    };
 
-        
-        // Mostrar mensaje de adición exitosa
-        showMessage(`El libro "${title}" fue agregado correctamente.`, 'success');
-    } 
+    // Crear el contenedor de botones para eliminar
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'book-item-buttons';
+
+    // Crear botón de eliminar
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.className = 'delete-button';
+    deleteButton.onclick = function () {
+        bookList.removeChild(bookItem);
+        showMessage(`El libro "${title}" fue eliminado.`, 'success');
+    };
+
+    // Agregar los botones al contenedor
+    buttonContainer.appendChild(readButton);
+    buttonContainer.appendChild(deleteButton);
+
+    // Crear los detalles del libro (inicialmente ocultos)
+    const bookDetails = document.createElement('div');
+    bookDetails.classList.add('book-details');
+    bookDetails.textContent = description;
+
+    // Mostrar detalles del libro al hacer clic en el libro
+    bookItem.onclick = function() {
+        const detailsVisible = bookDetails.style.display === 'block';
+        bookDetails.style.display = detailsVisible ? 'none' : 'block';
+    };
+
+    // Agregar los botones y detalles al libro
+    bookItem.appendChild(buttonContainer);
+    bookItem.appendChild(bookDetails);
+
+    // Agregar el libro a la lista
+    bookList.appendChild(bookItem);
+
+    // Limpiar los campos del formulario
+    document.getElementById('title').value = '';
+    document.getElementById('author').value = '';
+    document.getElementById('description').value = '';
+
+    // Mostrar mensaje de adición exitosa
+    showMessage(`El libro "${title}" fue agregado correctamente.`, 'success');
 });
-
-
 
 // Función para buscar libros en la lista
 function searchBooks() {
@@ -216,5 +214,3 @@ document.getElementById('show-register').addEventListener('click', function (e) 
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('register-container').classList.remove('hidden');
 });
-
-
