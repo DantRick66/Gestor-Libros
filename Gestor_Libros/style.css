@@ -312,8 +312,8 @@ textarea {
 }
 
 .read {
-    background-color: #d3ffd3; /* Fondo verde para marcar como leído */
-    text-decoration: line-through; /* Tachado del texto */
+    background-color: #9cea9c; 
+    text-decoration: line-through; 
 }
 
 .read-button {
