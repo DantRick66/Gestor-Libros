@@ -129,8 +129,8 @@ function searchBooks() {
 document.getElementById('login-form').addEventListener('submit', function (e) {
     e.preventDefault(); // Evitar recarga de la página
 
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
 
     // Limpiar mensajes anteriores
     const messageContainer = document.getElementById('message-container');
@@ -162,7 +162,7 @@ document.getElementById('login-form').addEventListener('submit', function (e) {
 
             // Mostrar el mensaje de bienvenida
             document.getElementById('welcome-message').style.display = 'block';
-            document.getElementById('user-name').textContent = `Bienvenido, ${storedUser.name}`;
+            document.getElementById('name').textContent = `Bienvenido, ${storedUser.name}`;
 
             // Mostrar el gestor de libros
             document.getElementById('gestor-libros').style.display = 'block';
@@ -181,9 +181,9 @@ document.getElementById('forgot-password').addEventListener('click', function ()
 document.getElementById('register-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const name = document.getElementById('register-name').value.trim();
-    const email = document.getElementById('register-email').value.trim();
-    const password = document.getElementById('register-password').value.trim();
+    const name = document.getElementById('rname').value.trim();
+    const email = document.getElementById('remail').value.trim();
+    const password = document.getElementById('rpassword').value.trim();
 
     // Limpiar mensajes anteriores
     const messageContainer = document.getElementById('message-container');

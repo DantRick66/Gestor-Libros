@@ -1,195 +1,397 @@
+import pytest
 import time
-import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.edge.service import Service
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import os
 
-class TestGestionDeLibros(unittest.TestCase):
+@pytest.fixture(scope="session")  # Cambiar el alcance a "session"
+def driver():
+    print("Iniciando el navegador Edge...")
+    # Configurar Edge
+    driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()))
+    driver.maximize_window()
+    yield driver
+    print("Cerrando el navegador Edge...")
+    driver.quit()
 
-    @classmethod
-    def setUpClass(cls):
-        # Configuración inicial del navegador
-        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        cls.driver.maximize_window()
-        cls.report_path = os.path.join(os.getcwd(), "reporte_resultados.html")
-        
-        # Crear el archivo de reporte en formato HTML
-        with open(cls.report_path, "w") as reporte:
-            reporte.write("<html><head><title>Reporte de Pruebas Automatizadas</title></head><body>")
-            reporte.write("<h1>Resultados de Pruebas Automatizadas</h1>")
-            reporte.write("<table border='1' style='width:100%;border-collapse:collapse;'>")
-            reporte.write("<tr><th>Historia</th><th>Resultado</th><th>Detalle</th><th>Captura</th></tr>")
+@pytest.fixture(scope="module")
+def open_page(driver):
+    # Accede a la URL solo una vez antes de todas las pruebas en el módulo
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")
+    yield driver  # Esto permite que las pruebas se ejecuten sin recargar la página
+    # No es necesario hacer nada después, ya que no necesitamos recargar la página entre las pruebas
 
-    def setUp(self):
-        # Navegar a la página de la gestión de libros antes de cada prueba
-        self.driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+# Ruta para el reporte HTML
+@pytest.fixture(scope="session")  # Cambiar el alcance a "session"
+def report_path():
+    path = os.path.join(os.getcwd(), "reporte_resultados.html")
+    with open(path, "w") as reporte:
+        reporte.write("<html><head><title>Reporte de Pruebas Automatizadas</title></head><body>")
+        reporte.write("<h1>Resultados de Pruebas Automatizadas</h1>")
+        reporte.write("<table border='1' style='width:100%;border-collapse:collapse;'>")
+        reporte.write("<tr><th>Historia</th><th>Resultado</th><th>Detalle</th><th>Captura</th></tr>")
+    yield path
+    with open(path, "a") as reporte:
+        reporte.write("</table></body></html>")
 
-    # Función para tomar capturas de pantalla y guardarlas en el directorio actual
-    def tomar_captura(self, nombre):
-        path = os.path.join(os.getcwd(), nombre)
-        self.driver.save_screenshot(path)
-        return nombre
+# Fixture para cerrar el navegador y finalizar el reporte al finalizar las pruebas
+@pytest.fixture(scope="session", autouse=True)
+def finalize_report(driver, report_path):
+    yield  # Esto permite que todas las pruebas se ejecuten primero
+    # Cerrar el navegador
+    driver.quit()
+    # Finalizar el reporte HTML
+    with open(report_path, "a") as reporte:
+        reporte.write("</table></body></html>")
 
-    # Función para agregar resultados al reporte en formato HTML
-    def agregar_a_reporte(self, historia, resultado, detalle, captura=None):
-        with open(self.report_path, "a") as reporte:
-            reporte.write(f"<tr><td>{historia}</td><td>{resultado}</td><td>{detalle}</td>")
-            if captura:
-                reporte.write(f"<td><a href='{captura}' target='_blank'>Ver Captura</a></td>")
-            else:
-                reporte.write("<td>No disponible</td>")
-            reporte.write("</tr>")
+def tomar_captura(driver, nombre):
+    path = os.path.join(os.getcwd(), nombre)
+    driver.save_screenshot(path)
+    return nombre
 
-    def test_agregar_libro_correctamente(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        # Completar el formulario
-        title_input.send_keys("Libro de Prueba")
-        author_input.send_keys("Autor de Prueba")
-        description_input.send_keys("Descripción de prueba para el libro.")
-        submit_button.click()
+def agregar_a_reporte(report_path, historia, resultado, detalle, captura=None):
+    with open(report_path, "a") as reporte:
+        reporte.write(f"<tr><td>{historia}</td><td>{resultado}</td><td>{detalle}</td>")
+        if captura:
+            reporte.write(f"<td><a href='{captura}' target='_blank'>Ver Captura</a></td>")
+        else:
+            reporte.write("<td>No disponible</td>")
+        reporte.write("</tr>")
 
-        # Esperar que el libro se haya agregado a la lista
-        time.sleep(2)
 
-        captura = self.tomar_captura("agregar_libro.png")
 
-        # Verificar que el libro aparezca en la lista
-        books = self.driver.find_elements(By.CSS_SELECTOR, ".book-item")
-        self.assertGreater(len(books), 0, "No se agregó el libro correctamente.")
-        self.assertIn("Libro de Prueba", books[0].text)
-        self.assertIn("Autor de Prueba", books[0].text)
+@pytest.mark.order(1)
+def test_registro_usuario(driver, report_path, open_page):
+    # Solo se hace driver.get() una vez gracias a la fixture open_page
+    register_link = driver.find_element(By.ID, "show-register")
+    register_link.click()
 
-        self.agregar_a_reporte("prueba 1", "Éxito", "Libro agregado correctamente.", captura)
+    time.sleep(2)
 
-    def test_agregar_libro_con_campos_vacios(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        title_input.clear()
-        author_input.clear()
-        description_input.clear()
-        submit_button.click()
+    # Localizar los elementos
+    rname_input = driver.find_element(By.ID, "rname")
+    remail_input = driver.find_element(By.ID, "remail")
+    rpassword_input = driver.find_element(By.ID, "rpassword")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit' and text()='Registrarse']")
 
-        time.sleep(2)
+    # Ingresar los datos en los campos de texto
+    rname_input.send_keys("nuevo usuario")
+    remail_input.send_keys("nuevo@gmail.com")
+    rpassword_input.send_keys("Djth2712")
 
-        captura = self.tomar_captura("agregar_libro_error.png")
+    # Esperar a que el botón sea clickeable y luego hacer clic
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(submit_button)).click()
 
-        # Verificar mensaje de error
-        error_message = self.driver.find_element(By.CSS_SELECTOR, ".message.error")
-        self.assertTrue(error_message.is_displayed(), "No se mostró el mensaje de error.")
-        self.assertEqual(error_message.text, "Por favor, completa todos los campos.")
+    # Esperar que el formulario de inicio de sesión sea visible
+    formulario_inicio = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "login-form"))
+    )
 
-        self.agregar_a_reporte("Prueba 2", "Éxito", "Error mostrado al dejar campos vacíos.", captura)
+    # Tomar la captura de pantalla
+    captura = tomar_captura(driver, "registro_exitoso.png")
 
-    def test_eliminar_libro(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        title_input.send_keys("Libro para Eliminar")
-        author_input.send_keys("Autor para Eliminar")
-        description_input.send_keys("Descripción para eliminar el libro.")
-        submit_button.click()
+    # Verificar que el formulario de inicio de sesión se mostró
+    assert formulario_inicio.is_displayed(), "No se mostró el formulario de inicio de sesión tras registrar el usuario."
 
-        time.sleep(2)
-        book_item = self.driver.find_element(By.XPATH, "//li[contains(text(), 'Libro para Eliminar')]")
-        delete_button = book_item.find_element(By.TAG_NAME, "button")
-        delete_button.click()
+    # Agregar los resultados al reporte
+    agregar_a_reporte(report_path, "Prueba 1", "Éxito", "Registro de usuario exitoso.", captura)
 
-        time.sleep(2)
-        captura = self.tomar_captura("eliminar_libro.png")
 
-        # Verificar que el libro haya sido eliminado
-        books = self.driver.find_elements(By.CSS_SELECTOR, ".book-item")
-        self.assertNotIn("Libro para Eliminar", [book.text for book in books], "El libro no fue eliminado correctamente.")
+@pytest.mark.order(2)
+def test_login_exitoso(driver, report_path, open_page):
+    time.sleep(2)
 
-        self.agregar_a_reporte("Prueba 3", "Éxito", "Libro eliminado correctamente.", captura)
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
 
-    def test_buscar_libro(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        title_input.send_keys("Libro de Búsqueda")
-        author_input.send_keys("Autor de Búsqueda")
-        description_input.send_keys("Descripción para buscar el libro.")
-        submit_button.click()
+    time.sleep(2)
 
-        time.sleep(2)
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
 
-        search_input = self.driver.find_element(By.ID, "search")
-        search_input.send_keys("Búsqueda")
-        time.sleep(2)
+    captura = tomar_captura(driver, "login_exitoso.png")
 
-        captura = self.tomar_captura("buscar_libro.png")
+    assert formulario_agregarlibros.is_displayed(), "No se mostró el formulario de agregar libros tras iniciar sesión"
+    
+    agregar_a_reporte(report_path, "Prueba 2", "Éxito", "Inicio de sesión exitoso.", captura)
 
-        # Verificar resultados de búsqueda
-        book_items = self.driver.find_elements(By.CSS_SELECTOR, ".book-item")
-        self.assertGreater(len(book_items), 0, "No se encontraron resultados para la búsqueda.")
-        self.assertIn("Libro de Búsqueda", book_items[0].text)
+@pytest.mark.order(3)
+def test_agregar_libro_correctamente(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
 
-        self.agregar_a_reporte("Prueba 4", "Éxito", "Resultados de búsqueda correctos.", captura)
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
+    
+    # Agregar libro
+    driver.find_element(By.ID, "title").send_keys("Libro de Prueba")
+    driver.find_element(By.ID, "author").send_keys("Autor de Prueba")
+    driver.find_element(By.ID, "description").send_keys("Descripción de prueba para el libro.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+    time.sleep(2)  # Esperar a que el libro se agregue
 
-    def test_ver_detalles_libro(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        title_input.send_keys("Libro Detalles")
-        author_input.send_keys("Autor Detalles")
-        description_input.send_keys("Descripción del libro detalles.")
-        submit_button.click()
+    # Verificar que el mensaje de éxito aparezca
+    success_message = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "message-container"))
+    )
 
-        time.sleep(2)
+    captura = tomar_captura(driver, "agregar_libro.png")
+    assert 'El libro "Libro de Prueba" fue agregado correctamente.', "El mensaje de éxito no se mostró correctamente."
+    # Agregar reporte de la prueba
+    agregar_a_reporte(report_path, "Prueba 3", "Éxito", "Libro agregado correctamente.", captura)
 
-        book_item = self.driver.find_element(By.XPATH, "//li[contains(text(), 'Libro Detalles')]")
-        book_item.click()
 
-        captura = self.tomar_captura("ver_detalles_libro.png")
+@pytest.mark.order(4)
+def test_agregar_libro_con_campos_vacios(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
 
-        # Verificar que los detalles se muestren correctamente
-        details_panel = self.driver.find_element(By.CSS_SELECTOR, ".book-details")
-        self.assertTrue(details_panel.is_displayed(), "No se mostraron los detalles del libro.")
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
 
-        self.agregar_a_reporte("Prueba 5", "Éxito", "Detalles del libro mostrados correctamente.", captura)
+    time.sleep(3)
 
-    def test_verificar_libro_en_lista(self):
-        title_input = self.driver.find_element(By.ID, "title")
-        author_input = self.driver.find_element(By.ID, "author")
-        description_input = self.driver.find_element(By.ID, "description")
-        submit_button = self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']")
-        
-        title_input.send_keys("Libro en Lista")
-        author_input.send_keys("Autor en Lista")
-        description_input.send_keys("Descripción del libro en lista.")
-        submit_button.click()
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+   
+    time.sleep(2)
+    # Verificar que el mensaje de error aparezca
+    error_message = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "message-container"))
+    )
 
-        time.sleep(2)
-        captura = self.tomar_captura("verificar_libro_en_lista.png")
+    captura = tomar_captura(driver, "agregar_libro_campos_vacios.png")
+    assert "Por favor, completa todos los campos.", "El mensaje de error no se mostró correctamente."
 
-        # Verificar que el libro está en la lista
-        books = self.driver.find_elements(By.CSS_SELECTOR, ".book-item")
-        self.assertIn("Libro en Lista", [book.text for book in books], "El libro no se encuentra en la lista.")
+    agregar_a_reporte(report_path, "Prueba 4", "Éxito", "Error mostrado al dejar campos vacíos.", captura)
 
-        self.agregar_a_reporte("Prueba 6", "Éxito", "Libro encontrado en la lista.", captura)
+@pytest.mark.order(5)
+def test_eliminar_libro(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-        with open(cls.report_path, "a") as reporte:
-            reporte.write("</table></body></html>")
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
 
-if __name__ == "__main__":
-    unittest.main()
+    driver.find_element(By.ID, "title").send_keys("Libro para Eliminar")
+    driver.find_element(By.ID, "author").send_keys("Autor para Eliminar")
+    driver.find_element(By.ID, "description").send_keys("Descripción para eliminar el libro.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+
+    time.sleep(2)
+    # Esperar hasta que el contenedor de botones sea visible
+    button_container = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "book-item-buttons"))
+    )
+
+    # Encontrar el botón específico dentro del contenedor
+    delete_button = button_container.find_element(By.CLASS_NAME, "delete-button")
+
+    # Hacer clic en el botón de eliminar
+    delete_button.click()
+
+    time.sleep(2)
+    captura = tomar_captura(driver, "eliminar_libro.png")
+
+    # Verificar que el libro haya sido eliminado
+    books = driver.find_elements(By.CSS_SELECTOR, ".book-item")
+    assert "Libro para Eliminar" not in [book.text for book in books], "El libro no fue eliminado correctamente."
+
+    agregar_a_reporte(report_path, "Prueba 5", "Éxito", "Libro eliminado correctamente.", captura)
+
+@pytest.mark.order(6)
+def test_buscar_libro(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
+
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
+
+    driver.find_element(By.ID, "title").send_keys("Libro de Búsqueda")
+    driver.find_element(By.ID, "author").send_keys("Autor de Búsqueda")
+    driver.find_element(By.ID, "description").send_keys("Descripción para buscar el libro.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+
+    time.sleep(2)
+
+    search_input = driver.find_element(By.ID, "search")
+    search_input.send_keys("Libro de Búsqueda")
+    time.sleep(2)
+
+    captura = tomar_captura(driver, "buscar_libro.png")
+
+    # Verificar resultados de búsqueda
+    book_items = driver.find_elements(By.CSS_SELECTOR, ".book-item")
+    assert len(book_items) > 0, "No se encontraron resultados para la búsqueda."
+    assert "Libro de Búsqueda" in book_items[0].text
+
+    agregar_a_reporte(report_path, "Prueba 6", "Éxito", "Resultados de búsqueda correctos.", captura)
+
+@pytest.mark.order(7)
+def test_ver_detalles_libro(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
+
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
+    driver.find_element(By.ID, "title").send_keys("Libro Detalles")
+    driver.find_element(By.ID, "author").send_keys("Autor Detalles")
+    driver.find_element(By.ID, "description").send_keys("Descripción del libro detalles.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+    
+    time.sleep(2)
+
+    book_item = driver.find_element(By.XPATH, "//li[contains(text(), 'Libro Detalles')]")
+    book_item.click()
+
+    captura = tomar_captura(driver, "ver_detalles_libro.png")
+
+    # Verificar que los detalles se muestren correctamente
+    details_panel = driver.find_element(By.CSS_SELECTOR, ".book-details")
+    assert details_panel.is_displayed(), "No se mostraron los detalles del libro."
+
+    agregar_a_reporte(report_path, "Prueba 7", "Éxito", "Detalles del libro mostrados correctamente.", captura)
+
+@pytest.mark.order(8)
+def test_verificar_libro_en_lista(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
+
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
+    driver.find_element(By.ID, "title").send_keys("Libro en Lista")
+    driver.find_element(By.ID, "author").send_keys("Autor en Lista")
+    driver.find_element(By.ID, "description").send_keys("Descripción del libro en lista.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+    
+ 
+    time.sleep(2)
+    captura = tomar_captura(driver, "verificar_libro_en_lista.png")
+
+    # Verificar que el libro está en la lista
+    books = driver.find_elements(By.CSS_SELECTOR, ".book-item")
+
+    agregar_a_reporte(report_path, "Prueba 8", "Éxito", "Libro encontrado en la lista.", captura)
+
+@pytest.mark.order(9)
+def test_marcar_libro_como_leido(driver, report_path, open_page):
+    driver.get("http://127.0.0.1:5500/Gestor_Libros/index.html")  
+    time.sleep(2)  # Esperar para que la página de login cargue completamente
+    
+    # Realizar el login
+    driver.find_element(By.ID, "email").send_keys("nuevo@gmail.com")
+    driver.find_element(By.ID, "password").send_keys("Djth2712")
+    submit_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+    submit_button.click()
+
+    time.sleep(2)  # Esperar a que la página cargue después del login
+    
+    # Verificar que el login fue exitoso, por ejemplo, buscando un elemento específico
+    formulario_agregarlibros = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "book-form"))
+    )
+    # Agregar un libro para marcar como leído
+    driver.find_element(By.ID, "title").send_keys("Libro Leído")
+    driver.find_element(By.ID, "author").send_keys("Autor Leído")
+    driver.find_element(By.ID, "description").send_keys("Descripción del libro leído.")
+    driver.find_element(By.XPATH, "//input[@type='submit']").click()
+    
+
+    time.sleep(2)
+
+    # Esperar hasta que el contenedor de botones sea visible
+    button_container = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "book-item-buttons"))
+    )
+    # Encontrar el contenedor del libro usando CSS, ejemplo: .book-item
+    book_item = driver.find_element(By.CSS_SELECTOR, ".book-item")
+
+    # Encontrar el botón específico dentro del contenedor
+    read_button = button_container.find_element(By.CLASS_NAME, "read-button")
+
+    # Hacer clic en el botón de Marcar libro
+    read_button.click()
+
+    # Verificar que el libro tiene la clase 'read'
+    assert "read" in book_item.get_attribute("class"), "El libro no se marcó como leído."
+
+    # Verificar si el estilo de texto tachado se ha aplicado al libro usando CSS
+    text_decoration = book_item.value_of_css_property('text-decoration')
+    assert "line-through" in text_decoration, "El estilo de texto tachado no se aplicó correctamente al marcar como leído."
+
+    # Verificar que el texto del botón cambió a "Marcar como no leído"
+    assert read_button.text == "Marcar como no leído", "El texto del botón no cambió correctamente."
+
+    # Captura de pantalla
+    captura = tomar_captura(driver, "marcar_libro_como_leido.png")
+
+    agregar_a_reporte(report_path, "Prueba 9", "Éxito", "Libro marcado como leído correctamente.", captura)
+
